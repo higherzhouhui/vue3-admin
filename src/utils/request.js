@@ -133,7 +133,7 @@ class HttpRequest {
     instance.interceptors.response.use(
       cres => {
         let res = cres;
-        if (res?.config.url === '/api/agent-server/agent/user/login') {
+        if (res?.config.url === '/myownFBSlive/agent-server/agent/user/login') {
           res = res.data;
         }
         const result = res.data;

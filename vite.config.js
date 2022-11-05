@@ -33,14 +33,14 @@ export default defineConfig(({ command, mode }) => {
       hmr: true,//开启热更新
       cors: true,
       proxy: {
-        '/api': {
+        '/myownFBSlive': {
           // target: 'http://192.168.10.17:8000',
           // target: 'http://192.168.10.30:8000',
           // target: 'http://192.168.10.17:8000',
           target: 'http://8.219.149.104:8000',
           ws: false,
           changeOrigin: true,
-          rewrite: (path) => path.replace(/^\/api/, "/"),
+          rewrite: (path) => path.replace(/^\/myownFBSlive/, "/"),
           // rewrite: (path) => regExps(path, '/api')
         },
         '/api2': {
