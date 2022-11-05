@@ -22,7 +22,7 @@ import http from '@/utils/request'
 // 添加总代理账号
 export function addTopAgaentRequest(data) {
   return http.request({
-    url: '/myownFBSlive/agent-server/api/agent/addTopAgent',
+    url: '/agent-server/api/agent/addTopAgent',
     method: 'post',
     data: data,
   })
@@ -31,7 +31,7 @@ export function addTopAgaentRequest(data) {
 
 export function login(data) {
   return http.request({
-    url: '/myownFBSlive/agent-server/agent/user/login',
+    url: '/agent-server/agent/user/login',
     method: 'post',
     data,
   })
@@ -39,7 +39,7 @@ export function login(data) {
 
 export function getCaptcha() {
   return http.request({
-    url: '/myownFBSlive/code',
+    url: '/code',
     method: 'get',
   })
 }
@@ -71,7 +71,7 @@ export function getCaptcha() {
 export function getInfo() {
   return http.request({
     method: 'get',
-    url: '/myownFBSlive/agent-server/agent/user/getUserOverviewInfo',
+    url: '/agent-server/agent/user/getUserOverviewInfo',
   })
 }
 
@@ -99,7 +99,7 @@ export function testRequest() {
 
 export function changePwd(data) {
   return http.request({
-    url: '/myownFBSlive/agent-server/agent/user/updatePassword',
+    url: '/agent-server/agent/user/updatePassword',
     method: 'post',
     data: {
       loginPwd: data?.account,
@@ -111,7 +111,7 @@ export function changePwd(data) {
 // 绑定手机:发送手机短信
 export function sendPhoneSms(data) {
   return http.request({
-    url: '/myownFBSlive/agent-server/agent/user/sendSms',
+    url: '/agent-server/agent/user/sendSms',
     method: 'post',
     data,
   })
@@ -120,7 +120,7 @@ export function sendPhoneSms(data) {
 // 绑定手机
 export function bindPhoneConfirm(data) {
   return http.request({
-    url: '/myownFBSlive/agent-server/agent/user/bindPhoneConfirm',
+    url: '/agent-server/agent/user/bindPhoneConfirm',
     method: 'post',
     data,
   })
@@ -128,7 +128,7 @@ export function bindPhoneConfirm(data) {
 
 export function updateOverviewInfo(data) {
   return http.request({
-    url: '/myownFBSlive/agent-server/agent/user/updateOverviewInfo',
+    url: '/agent-server/agent/user/updateOverviewInfo',
     method: 'post',
     data,
   })
@@ -138,21 +138,21 @@ export function updateOverviewInfo(data) {
 
 export function getBankList() {
   return http.request({
-    url: '/myownFBSlive/agent-server/agent/cardBind/getBankList',
+    url: '/agent-server/agent/cardBind/getBankList',
     method: 'get',
   })
 }
 
 export function getWalletList() {
   return http.request({
-    url: '/myownFBSlive/agent-server/agent/cardBind/getWalletList',
+    url: '/agent-server/agent/cardBind/getWalletList',
     method: 'get',
   })
 }
 
 export function addmyBank(data) {
   return http.request({
-    url: '/myownFBSlive/agent-server/agent/cardBind/addBank',
+    url: '/agent-server/agent/cardBind/addBank',
     method: 'post',
     data,
   })
@@ -160,7 +160,7 @@ export function addmyBank(data) {
 
 export function addmyWallet(data) {
   return http.request({
-    url: '/myownFBSlive/agent-server/agent/cardBind/addWallet',
+    url: '/agent-server/agent/cardBind/addWallet',
     method: 'post',
     data,
   })
@@ -168,7 +168,7 @@ export function addmyWallet(data) {
 
 export function bankmyUpdate(data) {
   return http.request({
-    url: '/myownFBSlive/agent-server/agent/cardBind/bankUpdate',
+    url: '/agent-server/agent/cardBind/bankUpdate',
     method: 'post',
     data,
   })
@@ -176,7 +176,7 @@ export function bankmyUpdate(data) {
 
 export function walletmyUpdate(data) {
   return http.request({
-    url: '/myownFBSlive/agent-server/agent/cardBind/updateWallet',
+    url: '/agent-server/agent/cardBind/updateWallet',
     method: 'post',
     data,
   })

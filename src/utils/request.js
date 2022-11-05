@@ -15,8 +15,8 @@ let downloadLoadingInstance;
 class HttpRequest {
   // #baseUrl
   constructor() {
-    this.baseUrl = '';
-    // this.baseUrl = this.getBaseUrl();
+    // this.baseUrl = '';
+    this.baseUrl = this.getBaseUrl();
     this.withCredentials = false
     this.timeout = 60 * 60 * 24 * 1000
   }
@@ -24,7 +24,7 @@ class HttpRequest {
   getBaseUrl() {
     const { envStr } = getEnvs()
     // const baseUrlStr = envStr === 'dev' ? import.meta.env.VITE_PROXY_DOMAIN_REAL : GLOBAL_DATA[envStr].baseUrl
-    const baseUrlStr = envStr === 'dev' ? 'http://34.150.29.102:8086/' : 'http://34.150.29.102:8086/'
+    const baseUrlStr = envStr === 'dev' ? 'http://192.168.10.30:8000/' : 'http://192.168.10.30:8000/'
     // const baseUrlStr = envStr === 'dev' ? '/api' : '/api'
     return baseUrlStr
   }
@@ -133,7 +133,7 @@ class HttpRequest {
     instance.interceptors.response.use(
       cres => {
         let res = cres;
-        if (res?.config.url === '/myownFBSlive/agent-server/agent/user/login') {
+        if (res?.config.url === '/agent-server/agent/user/login') {
           res = res.data;
         }
         const result = res.data;
