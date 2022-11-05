@@ -40,14 +40,14 @@ export default defineConfig(({ command, mode }) => {
           target: 'http://8.219.149.104:8000',
           ws: false,
           changeOrigin: true,
-          rewrite: (path) => path.replace(/^\/api/, ""),
+          rewrite: (path) => path.replace(/^\/api/, "/"),
           // rewrite: (path) => regExps(path, '/api')
         },
         '/api2': {
           target: 'http://192.168.10.17:8000',
           ws: false,
           changeOrigin: true,
-          rewrite: (path) => path.replace(/^\/api2/, ""),
+          rewrite: (path) => path.replace(/^\/api2/, "/"),
         }
       }
     },
