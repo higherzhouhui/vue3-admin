@@ -13,17 +13,17 @@ const useUserStore = defineStore({
     return {
       token: cookies.get(TOKEN),
       userInfo: cookies.get(TOKEN) ? JSON.parse(sessionStorage.getItem('userInfo')) : {},
-      uid: '9527',
+      uid: '',
       avatar: AVATAR,
-      name: '灰是小灰灰的灰',
-      phone: '15988888888',
-      email: '454539387@qq.com',
+      name: '',
+      phone: '',
+      email: '',
       identity: '',
       roles: [],
       account: '',
       permissions: [],
-      createTime: '11',
-      rolesType: '技术',
+      createTime: '',
+      rolesType: '',
       validTime: '',
       qq: '',
       availableBalance: '',
@@ -45,14 +45,21 @@ const useUserStore = defineStore({
       console.log('这是多少params', params);
       const cres = await login(params)
       // 可根据传回ID赋予权限;jackesy
-      const { agentAccount } = params;
-      let res = {...cres, roles: [agentAccount === 'jackesy' ? 'superAdmin' : 'superAdmin']};
+      const { accountType } = cres;
+      let res = {...cres, roles: [accountType ? 'superAdmin' : 'admin']};
       if (cres !== null) {
         console.log('这是多少result', res);
-        sessionStorage.setItem('userInfo', JSON.stringify(res))
-        this.userInfo = JSON.parse(sessionStorage.getItem('userInfo'))
-        this.SET_TOKEN(res.token)
-        router.push('/')
+        const { code, msg } = res;
+        // 由于成功和失败返回的数据结构不同需要特殊处理
+        if (!code) {
+          ElMessage.success('登录成功');
+          sessionStorage.setItem('userInfo', JSON.stringify(res))
+          this.userInfo = res;
+          this.SET_TOKEN(res.token)
+          router.push('/')
+        } else {
+          ElMessage.error(msg || '登录错误')
+        }
       } else {
         ElMessage.error('登录错误')
       }

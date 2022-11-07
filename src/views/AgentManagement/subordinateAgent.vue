@@ -41,6 +41,7 @@
         :current="state.current"
         :pageUpdate="pageUpdate"
         :sizeUpdate="sizeUpdate"
+        maxHeight="calc(100vh - 360px)"
       >
         <template #names="{ row }">
           <div v-if="row.name === '2'" class="normal">正常</div>
@@ -112,7 +113,7 @@ const state = reactive({
   recordList: [],
   columns: [
     { prop: 'agentAccount', label: '代理账号' },
-    { prop: 'custagentType', label: '代理类型' },
+    { prop: 'custagentType', label: '代理类型', width: '140' },
     { prop: 'custagentStatus', label: '状态', slot: 'names' },
     { prop: 'directAgentNum', label: '直属代理总数' },
     { prop: 'thisMonthDirectAgentNum', label: '本月新增直属代理数' },
@@ -211,7 +212,11 @@ const query = () => {
     state.formInline.startDate = state.timeRange[0];
     state.formInline.endDate = state.timeRange[1];
   }
-  getAgaentList(state.formInline).then(res => {
+  getAgaentList({
+    ...state.formInline,
+    pageNum: state.current,
+    pageSize: state.pageSize,
+  }).then(res => {
     state.loading = false;
     const result = res?.rows || [];
     result.forEach(item => {
@@ -258,8 +263,14 @@ const addForm = () => {
     }
   })
 }
-function pageUpdate(val) {}
-function sizeUpdate(val) {}
+function pageUpdate(val) {
+  state.current = val;
+  query();
+}
+function sizeUpdate(val) {
+  state.pageSize = val;
+  query();
+}
 
 </script>
 
@@ -330,7 +341,7 @@ function sizeUpdate(val) {}
 }
 .buts {
   display: flex;
-  justify-content: end;
+  justify-content: flex-end;
   .buts1 {
     width: 103px;
     height: 42px;

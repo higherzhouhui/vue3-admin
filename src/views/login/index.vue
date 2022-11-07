@@ -11,7 +11,7 @@
       </div>
     </div>
     <div class="login-container-div1 login-bj">
-      <LangSelect class="right-menu-qh" />
+      <!-- <LangSelect class="right-menu-qh" /> -->
       <div>
         <div class="title">👋欢迎来到代理系统</div>
         <login-pwd />

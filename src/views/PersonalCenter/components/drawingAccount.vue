@@ -25,6 +25,7 @@
       :pageUpdate="pageUpdate"
       :sizeUpdate="sizeUpdate"
       v-loading="state.loading"
+      maxHeight="calc(100vh - 430px)"
     >
       <template #action="{ row }">
         <el-button type="success" size="small" plain icon="Document" @click="showDia(row)"> 编辑 </el-button>
@@ -58,15 +59,19 @@
         <el-form :model="checkForm" ref="checkFormRef" label-width="85px">
           <el-form-item prop="realName" label="真实姓名：">
             <el-input v-model="checkForm.realName" placeholder="请输入真实姓名" class="inputs1" clearable />
+            <div class="el-form-error" v-if="!state.checkForm.realName && state.trySubStatus">姓名不能为空</div>
           </el-form-item>
           <el-form-item prop="bankName" label="开户行：">
             <el-input v-model="checkForm.bankName" placeholder="请输入银行名字" class="inputs1" clearable />
+            <div class="el-form-error" v-if="!state.checkForm.bankName && state.trySubStatus">开户行必须填写</div>
           </el-form-item>
           <el-form-item prop="bankNo" label="银行卡号：">
             <el-input v-model="checkForm.bankNo" placeholder="请输入银行卡号" class="inputs1" clearable />
+            <div class="el-form-error" v-if="!state.checkForm.bankNo && state.trySubStatus">银行卡号必须填写</div>
           </el-form-item>
           <el-form-item prop="bankAddress" label="支行地址：">
             <el-input v-model="checkForm.bankAddress" placeholder="请输入支行地址" class="inputs1" clearable />
+            <div class="el-form-error" v-if="!state.checkForm.bankAddress && state.trySubStatus">开户支行必须填写</div>
           </el-form-item>
           <el-form-item prop="bindStatus" label="状态：">
             <el-radio-group v-model="checkForm.bindStatus" class="ml-4 inputs1">
@@ -81,6 +86,7 @@
         <el-form :model="checkForm2" ref="checkFormRef2" label-width="85px">
           <el-form-item prop="walletName" label="名称">
             <el-input v-model="checkForm2.walletName" placeholder="请输入名称" class="inputs1" clearable />
+            <div class="el-form-error" v-if="!state.checkForm2.walletName && state.trySubStatus">名称必须填写</div>
           </el-form-item>
           <el-form-item prop="walletProtocol" label="网链协议：">
             <el-select
@@ -90,19 +96,21 @@
               size="large"
               clearable
             >
-              <el-option label="USDT-TRC20" value="1" />
-              <el-option label="USDT-ERC20" value="2" />
-              <el-option label="BTC-TRC20" value="3" />
-              <el-option label="BTC-ERC20" value="4" />
+              <el-option label="USDT-TRC20" value="USDT-TRC20" />
+              <el-option label="USDT-ERC20" value="USDT-ERC20" />
+              <el-option label="BTC-TRC20" value="BTC-TRC20" />
+              <el-option label="BTC-ERC20" value="BTC-ERC20" />
             </el-select>
+            <div class="el-form-error" v-if="!state.checkForm2.walletProtocol && state.trySubStatus">必须选择网络协议</div>
           </el-form-item>
           <el-form-item prop="walletAddress" label="收款地址：">
             <el-input v-model="checkForm2.walletAddress" placeholder="请输入收款地址" class="inputs1" clearable />
+            <div class="el-form-error" v-if="!state.checkForm2.walletAddress && state.trySubStatus">收款地址必须填写</div>
           </el-form-item>
           <el-form-item prop="bindStatus" label="状态：">
             <el-radio-group v-model="checkForm2.bindStatus" class="ml-4">
-              <el-radio :label="true" size="small">启用</el-radio>
-              <el-radio :label="false" size="small">禁用</el-radio>
+              <el-radio :label="1" size="small">启用</el-radio>
+              <el-radio :label="0" size="small">禁用</el-radio>
             </el-radio-group>
           </el-form-item>
         </el-form>
@@ -110,7 +118,7 @@
       <template #footer>
         <div class="but">
           <el-button @click="cancelDia" class="buts1">取消</el-button>
-          <el-button type="primary" size="medium" @click="addForm" class="buts2">确定</el-button>
+          <el-button type="primary" size="medium" @click="addForm" class="buts2" :loading="state.loading">确定</el-button>
         </div>
       </template>
     </el-dialog>
@@ -118,11 +126,17 @@
 </template>
 
 <script setup>
-import { reactive, toRefs, onMounted, ref, watch } from 'vue';
+import { reactive, toRefs, onMounted, ref, watch, defineProps } from 'vue';
 import { getWalletList, getBankList, addmyBank, addmyWallet, bankmyUpdate, walletmyUpdate } from '@/api/user';
 import Table from '@/components/ProTable/index.vue';
 import { ElMessage } from 'element-plus';
 
+const props = defineProps( {
+  popUpType: {
+    type: String,
+    default: '',
+  }
+})
 const state = reactive({
   recordList: [],
   columns: [
@@ -153,8 +167,7 @@ const state = reactive({
 
   checkDia: false,
   checkFormRef: null,
-  checkForm: {
-  },
+  checkForm: {},
   checkFormRef2: null,
   checkForm2: {
   },
@@ -166,29 +179,53 @@ const state = reactive({
 
   radioGroupData: '1',
   loading: false,
+  trySubStatus: false,
 })
 const { checkDia, checkForm, checkFormRef, checkForm2, checkFormRef2, radioGroupData } = toRefs(state)
 
 const tabPosition = ref('1')
 
-const popAddDialog = () => {
+const popAddDialog = (type) => {
   state.checkDia = true;
-  state.checkForm = {},
-  state.checkForm2 = {},
+  state.checkForm = {
+    realName: '',
+    bankName: '',
+    bankNo: '',
+    bankAddress:'',
+    bindStatus: 1,
+  };
+  state.checkForm2 = {
+    walletName: '',
+    walletAddress: '',
+    walletProtocol: '',
+    bindStatus: 1,
+  };
+  if (type === 'bank') {
+    state.radioGroupData = '1';
+  }
+  if (type === 'usdt') {
+    state.radioGroupData = '2';
+  }
   state.checkDiaType = '1';
 }
-
 // 初始化
 onMounted(() => {
-  getBankListReuquest();
+  if (props.popUpType) {
+    popAddDialog(props.popUpType);
+  } else {
+    getBankListReuquest();
+  }
 })
 const ThisStatus = ['禁用', '启用'];
 const getBankListReuquest = async() => {
   state.loading = true;
-  const res = await getBankList();
+  const res = await getBankList({
+    pageNum: state.current,
+    pageSize: state.pageSize,
+  });
   const result = res?.rows || [];
   result.forEach(item => {
-    item.custbindStatus = ThisStatus[item.bindStatus];
+    item.custbindStatus = ThisStatus[item.bindStatus ? 1 : 0];
   });
   state.recordList = result;
   state.total = res?.total || 0;
@@ -197,7 +234,10 @@ const getBankListReuquest = async() => {
 
 const getWalletListReuquest = async() => {
   state.loading = true;
-  const res = await getWalletList();
+  const res = await getWalletList({
+    pageNum: state.current2,
+    pageSize: state.pageSize2,
+  });
   const result = res?.rows || [];
   result.forEach(item => {
     item.custbindStatus = ThisStatus[item.bindStatus ? 1 : 0];
@@ -215,12 +255,19 @@ watch(() => state.radioGroupData, (newVal, oldVal) => {
   }
 })
 
+watch(() => props.popUpType, (newVal) => {
+  if (newVal) {
+    popAddDialog(newVal);
+  }
+})
+
 // 编辑
 const showDia = data => {
+  console.log(data);
   state.checkForm = data;
   state.checkForm2 = data;
   // console.log('当前数据', data)
-  state.checkDia = true
+  state.checkDia = true;
   state.checkDiaType = '2'
 }
 // 禁用/启用
@@ -234,16 +281,21 @@ const deleteAddress = data => {
         if (res?.code === 200) {
           ElMessage.success(ThisStatus[cstatus] + '成功!');
           getBankListReuquest();
+        } else {
+          ElMessage.error(res?.msg || '网络错误，请重试!');
         }
     })
   } else {
+    const cstatus = data.bindStatus === 0 ? 1 : 0;
     walletmyUpdate({
       ...data,
-      bindStatus: !data.bindStatus,
+      bindStatus: cstatus,
     }).then(res => {
         if (res?.code === 200) {
           ElMessage.success(`${data.bindStatus ? '禁用' : '启用'}成功`);
           getWalletListReuquest();
+        } else {
+          ElMessage.error(res?.msg || '网络错误，请重试!');
         }
     })
   }
@@ -251,46 +303,68 @@ const deleteAddress = data => {
 // 取消
 const cancelDia = () => {
   checkDia.value = false
+  state.trySubStatus = false;
 }
 // 确定
 const addForm = () => {
   if (state.radioGroupData === '1') {
+    if (!state.checkForm.realName || !state.checkForm.bankNo || !state.checkForm.bankName || !state.checkForm.bankAddress) {
+      state.trySubStatus = true;
+      return;
+    }
+    state.loading = true;
     // 编辑
     if (state.checkDiaType === '2') {
       bankmyUpdate(state.checkForm).then(res => {
+          state.loading = false;
           if (res?.code === 200) {
             checkDia.value = false;
             ElMessage.success('修改成功!');
             getBankListReuquest();
+          } else {
+            ElMessage.error(res?.msg || '网络错误，请重试!');
           }
         })
     } else {
       addmyBank(state.checkForm).then(res => {
+        state.loading = false;
         if (res?.code === 200) {
           checkDia.value = false;
           ElMessage.success('添加成功!');
           getBankListReuquest();
+        } else {
+          ElMessage.error(res?.msg || '网络错误，请重试!');
         }
       })
     }
   }
   if (state.radioGroupData === '2') {
+    if (!state.checkForm2.walletAddress || !state.checkForm2.walletName || !state.checkForm2.walletProtocol) {
+      state.trySubStatus = true;
+      return;
+    }
     if (state.checkDiaType === '2') {
       walletmyUpdate(state.checkForm2).then(res => {
+          state.loading = false;
           if (res?.code === 200) {
             checkDia.value = false;
             ElMessage.success('修改成功!');
             getWalletListReuquest();
+          } else {
+            ElMessage.error(res?.msg || '网络错误，请重试!');
           }
         })
     } else {
       addmyWallet(state.checkForm2).then((res) => {
-      if (res?.code === 200) {
-          checkDia.value = false;
-          ElMessage.success('添加成功!');
-          getWalletListReuquest();
-        }
-      })
+        state.loading = false;
+        if (res?.code === 200) {
+            checkDia.value = false;
+            ElMessage.success('添加成功!');
+            getWalletListReuquest();
+          } else {
+            ElMessage.error(res?.msg || '网络错误，请重试!');
+          }
+        })
     }
 
   }
@@ -298,18 +372,23 @@ const addForm = () => {
 
 // 翻页
 const pageUpdate = data => {
-  console.log(data)
+  state.current = data;
+  getBankListReuquest();
 }
 const sizeUpdate = data => {
-  console.log(data)
+  state.pageSize = data;
+  getBankListReuquest();
 }
 // 虚拟币翻页
 const pageUpdate2 = data => {
-  console.log(data)
+  state.current2 = data;
+  getWalletListReuquest();
 }
 const sizeUpdate2 = data => {
-  console.log(data)
+  state.pageSize2 = data;
+  getWalletListReuquest();
 }
+
 </script>
 
 <style lang="scss" scoped>
@@ -328,7 +407,7 @@ const sizeUpdate2 = data => {
 }
 .but {
   display: flex;
-  justify-content: end;
+  justify-content: flex-end;
   .buts1 {
     width: 103px;
     height: 42px;

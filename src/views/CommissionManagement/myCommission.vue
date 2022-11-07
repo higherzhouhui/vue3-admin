@@ -177,7 +177,7 @@ const submitForm2 = () => {
 }
 .but {
   display: flex;
-  justify-content: end;
+  justify-content: flex-end;
 }
 .buts1 {
   width: 103px;

@@ -9,11 +9,12 @@
         <el-input v-model="state.formInline.agentAccount" placeholder="请输入代理账号" class="form-items" clearable />
       </el-form-item>
       <el-form-item label="代理级别:" class="form-items-body">
-        <el-select v-model="state.formInline.agentLevel" class="m-2 form-items" placeholder="请选择代理级别" clearable>
+        <!-- <el-select v-model="state.formInline.agentLevel" class="m-2 form-items" placeholder="请选择代理级别" clearable>
           <el-option :value="1" label="总代"></el-option>
           <el-option :value="2" label="一级代理"></el-option>
           <el-option :value="3" label="二级代理"></el-option>
-        </el-select>
+        </el-select> -->
+        <el-input v-model="state.formInline.agentLevel" placeholder="请输入代理级别" class="form-items" clearable />
       </el-form-item>
       <el-form-item>
         <el-button class="buts" @click="query">查询</el-button>
@@ -29,6 +30,11 @@
         :pageUpdate="pageUpdate"
         :sizeUpdate="sizeUpdate"
       >
+        <template #privateDomain="{ row }">
+          <div v-if="row.privateDomainsDemo[0] !== undefined">
+            <div v-for="item in row.privateDomainsDemo" :key="item">{{ item }}</div>
+          </div>
+        </template>
         <template #action="{ row }">
           <el-button type="success" size="small" plain icon="Document" @click="showDia(row)"> 绑定域名 </el-button>
           <!-- <el-button type="danger" size="small" plain icon="Document" @click="deleteAddress(row)"> 禁用 </el-button> -->
@@ -53,7 +59,7 @@
           >
             <el-form-item prop="cnameId" label="网关IP/cname域名">
               <div class="private">
-                <el-input v-model="checkForm.cnameId" placeholder="请输入网关IP/cname域名" clearable class="inputs" />
+                <el-input :value="state.cname" disabled placeholder="请输入网关IP/cname域名" clearable class="inputs" />
               </div>
             </el-form-item>
             <el-form-item prop="account1" label="绑定私有域名">
@@ -65,7 +71,7 @@
               </div>
             </el-form-item>
 
-            <el-form-item prop="account2" label="绑定私有域名" v-for="(item, index) in checkForm.rules" :key="item.id">
+            <el-form-item label="绑定私有域名" v-for="(item, index) in checkForm.rules" :key="item.id">
               <div class="private">
                 <el-input
                   v-model="checkForm.rules[index].rules"
@@ -114,17 +120,26 @@ import Table from '@/components/ProTable/index.vue'
 import QrcodeVue from 'qrcode.vue'
 import html2canvas from 'html2canvas'
 import { list, bind } from '@/api/extension/extension'
+import { ElMessage } from 'element-plus';
 
 const state = reactive({
   recordList: [],
   columns: [
     { prop: 'agentAccount', label: '代理账号' },
-    { prop: 'agentLevel', label: '代理级别' },
+    { prop: 'agentLevelType', label: '代理级别' },
     { prop: 'parentAccount', label: '上级代理' },
     { prop: 'promoteDomain', label: '通用推广链接', width: 200 },
     { prop: 'cname', label: '绑定网关IP/cname域名', width: 200 },
-    { prop: 'privateDomain', label: '绑定私有域名', width: 200 },
-    { label: '操作', fixed: 'right', slot: 'action', width: 300 },
+    { prop: 'privateDomains', label: '绑定私有域名', width: 200, slot: 'privateDomain' },
+    { label: '操作', fixed: 'right', slot: 'action', width: 150 },
+  ],
+  levelList: [
+    {label: '全部', value: ''},
+    {label: '总代', value: 0},
+    {label: '一级代理', value: 1},
+    {label: '二级代理', value: 2},
+    {label: '三级代理', value: 3},
+    {label: '四级代理', value: 4},
   ],
   total: 0,
   pageSize: 10,
@@ -133,13 +148,16 @@ const state = reactive({
   checkDia: false,
   checkFormRef: null,
   checkForm: {
-    account: '',
+    cnameId: '',
     account1: '',
-    account2: '',
-    user: '',
     rules: [],
   },
   checkDiaType: '',
+  agentId: '',
+  domainId: '',
+  cnameId: '',
+  promoteDomain: '',
+  cname: '',
 })
 const { checkDia, checkForm, checkFormRef } = toRefs(state)
 
@@ -150,6 +168,11 @@ const listData = () => {
   // state.formInline
   list(state.formInline).then(item => {
     if (item.code === 200) {
+      item.rows.forEach((value, index) => {
+        value.privateDomainsDemo = value.privateDomains.split('|')
+        value.agentLevelType = state.levelList[value.agentLevel].label;
+        value.parentAccount = value.parentAccount || '无';
+      })
       state.recordList = item.rows
       state.total = item.total
     }
@@ -166,6 +189,11 @@ const query = () => {
 // 绑定域名
 const showDia = data => {
   console.log('绑定域名', data)
+  state.agentId = data.agentId
+  state.cnameId = data.cnameId
+  state.cname = data.cname
+  state.domainId = data.domainId
+  state.promoteDomain = data.promoteDomain
   state.checkDia = true
   state.checkDiaType = '1'
 }
@@ -223,7 +251,36 @@ const cancelDia = () => {
 
 // 保存
 const addForm = () => {
-  console.log(checkForm.value)
+  console.log(state.agentId, state.checkForm)
+  let data = {
+    agentId: state.agentId,
+    cnameId: state.cnameId,
+    privateDomain: '',
+    domainId: state.domainId,
+    promoteDomain: state.promoteDomain,
+  }
+
+  if (state.checkForm.rules[0] !== undefined) {
+    let a = ''
+    state.checkForm.rules.forEach((value, index) => {
+      a += `,${value.rules}`
+    })
+    console.log(a)
+    data.privateDomain = `${state.checkForm.account1}${a}`
+  } else {
+    data.privateDomain = state.checkForm.account1
+  }
+
+  bind(data).then(item => {
+    if (item.code === 200) {
+      cancelDia()
+      listData() //刷新
+      ElMessage.success('成功')
+    } else {
+      ElMessage.error(item.msg)
+    }
+  })
+  // console.log(state.checkForm, data)
 }
 function pageUpdate(val) {}
 function sizeUpdate(val) {}
@@ -243,7 +300,7 @@ function submitForm() {
 }
 .but {
   display: flex;
-  justify-content: end;
+  justify-content: flex-end;
 }
 .buts1 {
   width: 103px;

@@ -48,11 +48,10 @@ defineOptions({
 
 .sidebar-logo-container {
   position: relative;
-  width: 100%;
   height: 50px;
   line-height: 50px;
-  text-align: center;
   overflow: hidden;
+  margin-left: 30px;
   .sidebar-logo-link {
     height: 100%;
     width: 100%;

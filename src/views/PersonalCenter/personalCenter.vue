@@ -15,7 +15,7 @@
       <div v-if="coreLeftIndex === '1'">
         <!-- <ExtensionDomainName /> -->
         <div class="titles_font">基本信息</div>
-        <div style="padding-left: 110px">
+        <div style="padding-left: 110px" v-loading="!userStore?.account">
           <!-- 头像 -->
           <el-avatar :size="80" :src="circleUrl" style="margin-left: 100px" :icon="UserFilled" />
           <div class="displ" style="margin-top: 30px">
@@ -54,13 +54,13 @@
           </div>
           <div class="displ">
             <div class="displ_left"></div>
-            <el-button :loading="state.infoLoading" class="but1s" @click="but">修改</el-button>
+            <el-button :loading="state.infoLoading" class="but1s" @click="but">保存</el-button>
           </div>
         </div>
       </div>
       <div v-if="coreLeftIndex === '2'" style="display: flex; align-items: center; justify-content: center">
         <div class="coreLeft2">
-          <div class="coreLeft2_font">为了确保您的账号安全，请您填写相关安全信息</div>
+          <div class="coreLeft2_font">为了确保您的账号安全，请您填写相关安全信息，以备不时之需</div>
           <div class="coreLeft2_div" style="margin-bottom: 20px">
             <div class="coreLeft2_div2">
               <img src="../../assets/imgs/sy/slog.png" alt="" />
@@ -79,7 +79,7 @@
                 <div>修改绑定手机号码，用于接收短信验证码</div>
               </div>
             </div>
-            <el-button class="coreLeft2_but" @click="modify(2)">修改</el-button>
+            <el-button class="coreLeft2_but" @click="modify(2)">验证</el-button>
           </div>
         </div>
 
@@ -98,9 +98,10 @@
               <el-form-item prop="account2" label="新密码:">
                 <el-input v-model="checkForm.account2" placeholder="请输入新密码" class="inputs1" clearable type="password" show-password/>
               </el-form-item>
-              <!-- <el-form-item prop="account3" label="确认密码:">
-                <el-input v-model="checkForm.account3" placeholder="请再次确认密码" class="inputs1" clearable type="password" show-password/>
-              </el-form-item> -->
+              <el-form-item prop="account3" label="确认密码:">
+                <el-input v-model="checkForm.account3" placeholder="请再次输入密码" class="inputs1" clearable type="password" show-password/>
+                <div style="color: red" v-if="checkForm.account3.length > 0 && checkForm.account2 !== checkForm.account3">两次密码不一致</div>
+              </el-form-item>
             </el-form>
           </div>
           <!-- 手机 -->
@@ -112,6 +113,7 @@
               </el-form-item>
               <el-form-item prop="code" label="验证码:" style="position: relative">
                 <el-input v-model="checkForm2.verifyCode" placeholder="请输入验证码" class="inputs1" clearable @keyup.enter="addForm"/>
+                <div style="color: red" v-if="checkForm2.verifyCode.length > 0 && checkForm2.verifyCode.length < 3">验证码错误</div>
                 <div
                   v-if="!state.verificationD"
                   style="font-size: 14px; color: #5f2ae0; position: absolute; top: 5px; right: 10px; cursor: pointer"
@@ -120,7 +122,7 @@
                   获取验证码
                 </div>
                 <div v-else style="font-size: 14px; position: absolute; top: 5px; right: 30px">
-                  {{ state.numbers }}
+                  {{ state.numbers }}秒后重新发送
                 </div>
               </el-form-item>
             </el-form>
@@ -134,7 +136,7 @@
         </el-dialog>
       </div>
       <div v-if="coreLeftIndex === '3'">
-        <DrawingAccount />
+        <DrawingAccount :popUpType="route.query.popUpType" />
       </div>
     </div>
     <!-- <img src="../../assets/imgs/sy/sjlog.png" alt="" /> -->
@@ -146,11 +148,12 @@ import { reactive, toRefs, onMounted, onUpdated, watch } from 'vue'
 import ExtensionDomainName from './components/extensionDomainName.vue'
 import DrawingAccount from './components/drawingAccount.vue'
 import { UserFilled } from '@element-plus/icons-vue'
-import { useRoute } from 'vue-router' 
+import { useRoute, useRouter } from 'vue-router' 
 import { useUserStore } from '@/store'
 import { changePwd, sendPhoneSms, bindPhoneConfirm, updateOverviewInfo } from '@/api/user';
 import { ElMessage } from 'element-plus';
 const route = useRoute();
+const router = useRouter()
 const userStore = useUserStore();
 const state = reactive({
   coreLeft: [
@@ -173,7 +176,7 @@ const state = reactive({
     account3: '',
   },
   checkForm2: {
-    phone: userStore.phone,
+    phone: '',
     countryCode: '+86',
     verifyCode: '',
   },
@@ -201,23 +204,15 @@ const {
 onMounted(async() => {
   await userStore.GET_USER_INFO();
   state.qqData = userStore.qq;
-  if (route.query.id !== undefined) {
-    state.coreLeftIndex = route.query.id
-    state.coreLeft.forEach(item => {
-      if (item.id === route.query.id) {
-        item.Check = true
-      } else {
-        item.Check = false
-      }
-    })
-  }
 })
 
-watch(() => route.query.id, (newVal, oldVal) => {
+watch(() => route.query.id, async(newVal, oldVal) => {
   if (newVal !== undefined) {
-    state.coreLeftIndex = newVal.id
+    await userStore.GET_USER_INFO();
+    state.qqData = userStore.qq;
+    state.coreLeftIndex = newVal;
     state.coreLeft.forEach(item => {
-      if (item.id === newVal.id) {
+      if (item.id === newVal) {
         item.Check = true
       } else {
         item.Check = false
@@ -228,36 +223,21 @@ watch(() => route.query.id, (newVal, oldVal) => {
 
 // 切换
 const coreLeftF = item => {
-  state.coreLeft.forEach(value => {
-    if (item.id === value.id) {
-      if (checkFormRef.value !== null) {
-        checkFormRef.value.resetFields()
-      }
-      if (checkFormRef2.value !== null) {
-        checkFormRef2.value.resetFields()
-      }
-      value.Check = true
-      state.coreLeftIndex = value.id
-    } else {
-      value.Check = false
-    }
-  })
+  router.push({ name: 'personalCenter', query: { id: item.id } })
 }
 // 修改密码 手机
 const modify = data => {
   state.checkDia = true
-  console.log(data)
   if (data === 1) {
     state.radioGroupData = '1'
   } else {
-    state.checkForm2.phone = userStore.phone;
     state.radioGroupData = '2'
   }
 }
 
 // 验证
 const verification = () => {
-  if (checkForm2.phone.length !== 11) {
+  if (state.checkForm2.phone.length !== 11) {
     return;
   }
   sendPhoneSms({
@@ -285,17 +265,29 @@ const verification = () => {
 // 取消
 const cancelDia = () => {
   if (state.radioGroupData === '1') {
-    checkFormRef11.value.resetFields()
+    // checkFormRef11.value.resetFields()
+    state.checkForm = {
+      account: '',
+      account2: '',
+      account3: '',
+    }
   }
   if (state.radioGroupData === '2') {
-    checkFormRef22.value.resetFields()
+    // checkFormRef22.value.resetFields()
+    state.checkForm2.verifyCode = '';
+    state.checkForm2.phone = '';
   }
   checkDia.value = false
 }
 // 确定
 const addForm = () => {
   if (state.radioGroupData === '1') {
+    if (state.checkForm.account2 !== state.checkForm.account3 || !state.checkForm.account.length || !state.checkForm.account2.length) {
+      return;
+    }
+    state.infoLoading = true;
     changePwd(state.checkForm).then((res) => {
+      state.infoLoading = false;
       if (res?.code === 200) {
         ElMessage.success('修改成功！');
         checkDia.value = false
@@ -308,10 +300,12 @@ const addForm = () => {
   }
   if (state.radioGroupData === '2') {
     // 修改手机号
-    if (state.checkForm2.phone.length !== 11 || !state.verifyCode) {
+    if (state.checkForm2.phone.length !== 11 || state.checkForm2.verifyCode.length < 3) {
       return;
     }
+    state.infoLoading = true;
     bindPhoneConfirm(state.checkForm2).then(res => {
+      state.infoLoading = false;
       if (res?.code === 200) {
         ElMessage.success('修改成功');
         state.checkForm2.verifyCode = '';

@@ -15,8 +15,8 @@ let downloadLoadingInstance;
 class HttpRequest {
   // #baseUrl
   constructor() {
-    // this.baseUrl = '';
-    this.baseUrl = this.getBaseUrl();
+    this.baseUrl = '';
+    // this.baseUrl = this.getBaseUrl();
     this.withCredentials = false
     this.timeout = 60 * 60 * 24 * 1000
   }
@@ -24,7 +24,7 @@ class HttpRequest {
   getBaseUrl() {
     const { envStr } = getEnvs()
     // const baseUrlStr = envStr === 'dev' ? import.meta.env.VITE_PROXY_DOMAIN_REAL : GLOBAL_DATA[envStr].baseUrl
-    const baseUrlStr = envStr === 'dev' ? 'http://192.168.10.30:8000/' : 'http://192.168.10.30:8000/'
+    const baseUrlStr = envStr === 'dev' ? 'http://34.150.29.102:8086/' : 'http://34.150.29.102:8086/'
     // const baseUrlStr = envStr === 'dev' ? '/api' : '/api'
     return baseUrlStr
   }
@@ -62,10 +62,11 @@ class HttpRequest {
     const userStore = useUserStore()
     switch (status) {
       case 400:
-        errMessage = '错误请求'
+        errMessage = ''
         break
       case 401:
         errMessage = '未授权，请重新登录'
+        ElMessage.error(errMessage);
         userStore.RESET_INFO()
         router.push('/login')
         window.location.reload()
@@ -101,7 +102,7 @@ class HttpRequest {
         errMessage = 'http版本不支持该请求'
         break
       default:
-        errMessage = '连接错误'
+        errMessage = ''
     }
     return errMessage
   }
@@ -133,12 +134,17 @@ class HttpRequest {
     instance.interceptors.response.use(
       cres => {
         let res = cres;
-        if (res?.config.url === '/agent-server/agent/user/login') {
-          res = res.data;
+        if (res?.config.url === '/api/agent-server/agent/user/login') {
+          res = cres.data;;
         }
-        const result = res.data;
+        const result = res.data || res;
+        if (result && result.code) {
+          const msg = that.checkStatus(result.code);
+          if (msg) {
+            ElMessage.error(msg);
+          }
+        }
         const type = Object.prototype.toString.call(result)
-
         // 如果是文件流 直接返回
         if (type === '[object Blob]' || type === '[object ArrayBuffer]' || type === '[object Object]') {
           return result;

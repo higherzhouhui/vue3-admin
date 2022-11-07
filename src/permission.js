@@ -12,7 +12,6 @@ router.beforeEach(async (to, from, next) => {
   const hasToken = cookies.get(TOKEN);
   const userStore = useUserStore()
   const permissionStore = usePermissionStore();
-  console.log(hasToken);
   if (hasToken && hasToken !== 'undefined') {
     if (to.path === '/login') {
       next({ path: '/' })

@@ -83,3 +83,12 @@ export function runJob(jobId, jobGroup) {
         data: data
     })
 }
+
+// 直属会员佣金报表
+export function childCommissionStatisRequest(data) {
+    return http.request({
+        url: '/api/commission-server/agent/childCommissionStatis',
+        method: 'post',
+        data: data
+    })
+}

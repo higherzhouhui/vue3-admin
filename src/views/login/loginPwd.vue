@@ -58,7 +58,7 @@
             style="width: 370px; height: 50px; margin-right: 20px;"
             class="inputs"
           />
-        <div class="code">
+        <div class="code" v-loading="!captchaImg">
           <img :src="captchaImg" alt="" @click="updateImage" />
         </div>
         <!-- <div class="code" @click="refreshCode">
@@ -198,10 +198,9 @@ function loginHandle() {
   //   })
   //   return
   // }
-
-  loading.value = true
   ruleForm.value.validate(async valid => {
     if (valid) {
+    loading.value = true;
       try {
         const params = {
           // username: formState.account,

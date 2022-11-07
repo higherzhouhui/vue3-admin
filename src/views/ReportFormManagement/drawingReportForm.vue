@@ -20,7 +20,7 @@
         <el-button @click="query" class="but" icon="Search">查询</el-button>
       </el-form-item>
     </el-form>
-    <div style="padding: 12px; background: #fafafa; border-radius: 10px">
+    <div style="padding: 12px; background: #fafafa; border-radius: 10px" v-loading="state.loading">
       <Table
         :data="state.recordList"
         :columns="state.columns"
@@ -31,6 +31,7 @@
         :sizeUpdate="sizeUpdate"
         :summary-method="getSummaries"
         show-summary
+        maxHeight="calc(100vh - 360px)"
       >
       </Table>
     </div>
@@ -42,17 +43,7 @@ import { reactive, ref, toRefs, onMounted } from 'vue'
 import Table from '@/components/ProTable/index.vue'
 import { memberCommissionStatis } from '@/api/reportForm/reportForm'
 const state = reactive({
-  recordList: [
-    {
-      id: 12,
-      account: 'fhjdf',
-      level: 2,
-      name: 'sdfdf',
-      mobile: '21334324324',
-      email: '23434354@45',
-      email6: '1112',
-    },
-  ],
+  recordList: [],
   columns: [
     { prop: 'month', label: '月份', width: 120 },
     { prop: 'agentAccount', label: '代理账号', width: 100 },
@@ -100,6 +91,7 @@ const state = reactive({
       Check: false,
     },
   ],
+  loading: true,
 })
 const { checkDia, checkForm, checkFormRef } = toRefs(state)
 
@@ -107,11 +99,17 @@ onMounted(() => {
   memberCommissionStatisData()
 })
 const memberCommissionStatisData = () => {
-  memberCommissionStatis(state.formInline).then(item => {
+  state.loading = true;
+  memberCommissionStatis({
+    ...state.formInline,
+    pageNum: state.current,
+    pageSize: state.pageSize,
+  }).then(item => {
     if (item.code === 200) {
-      state.recordList = item.rows
-      state.total = item.total
+      state.recordList = item.rows;
+      state.total = item.total;
     }
+    state.loading = false;
     console.log(item)
   })
 }
@@ -165,8 +163,14 @@ const getSummaries = param => {
   return sums
 }
 
-function pageUpdate(val) {}
-function sizeUpdate(val) {}
+function pageUpdate(val) {
+  state.current = val;
+  query();
+}
+function sizeUpdate(val) {
+  state.pageSize = val;
+  query();
+}
 </script>
 
 <style lang="scss" scoped>

@@ -32,36 +32,24 @@ export default defineConfig(({ command, mode }) => {
       open: true,
       hmr: true,//开启热更新
       cors: true,
-      // proxy: {
-      //   '/api': {
-      //     // target: 'http://192.168.10.17:8000',
-      //     // target: 'http://192.168.10.30:8000',
-      //     // target: 'http://192.168.10.17:8000',
-      //     target: 'http://8.219.149.104:8000',
-      //     ws: false,
-      //     changeOrigin: true,
-      //     rewrite: (path) => path.replace(/^\/api/, "/"),
-      //     // rewrite: (path) => regExps(path, '/api')
-      //   },
-      //   '/api2': {
-      //     target: 'http://192.168.10.17:8000',
-      //     ws: false,
-      //     changeOrigin: true,
-      //     rewrite: (path) => path.replace(/^\/api2/, "/"),
-      //   }
-      // }
-      ['']: {
-        // target: 'http://47.56.133.230',
-        // target: 'http://47.56.137.255:9191',
-        // target: 'http://10.39.38.47:8080',
-        target: 'http://192.168.10.30:8000',
-        changeOrigin: true,
-        ws: true,
-        secure: false,
-        pathRewrite: {
-          ['^' + '']: ''
+      proxy: {
+        '/api': {
+          // target: 'http://192.168.10.17:8000',
+          // target: 'http://192.168.10.30:8000',
+          target: 'http://192.168.10.30:8000/',
+          // target: 'http://8.219.149.104:8000',
+          ws: false,
+          changeOrigin: true,
+          rewrite: (path) => path.replace(/^\/api/, ""),
+          // rewrite: (path) => regExps(path, '/api')
+        },
+        '/api2': {
+          target: 'http://192.168.10.17:8000',
+          ws: false,
+          changeOrigin: true,
+          rewrite: (path) => path.replace(/^\/api2/, ""),
         }
-      },
+      }
     },
 
     define: {

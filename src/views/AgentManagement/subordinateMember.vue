@@ -32,7 +32,7 @@
         </el-form-item>
       </el-form>
     </el-scrollbar>
-    <div style="padding: 12px; background: #fafafa; border-radius: 10px">
+    <div style="padding: 12px; background: #fafafa; border-radius: 10px" v-loading="state.loading">
       <Table
         :data="state.recordList"
         :columns="state.columns"
@@ -41,6 +41,7 @@
         :current="state.current"
         :pageUpdate="pageUpdate"
         :sizeUpdate="sizeUpdate"
+        maxHeight="calc(100vh - 360px)"
       >
         <template #nick="{ row }">
           <div v-if="row.nick === '2'" class="normal">正常</div>
@@ -85,11 +86,13 @@ const state = reactive({
   },
   checkDiaType: '',
   rangeTime: [],
+  loading: true,
 })
 const { checkDia, checkForm, checkFormRef } = toRefs(state)
 
 // 查询
 const query = () => {
+  state.loading = true;
   if (state.rangeTime.length) {
     state.formInline.startDate = state.rangeTime[0];
     state.formInline.endDate = state.rangeTime[1];
@@ -111,8 +114,15 @@ const cancelDia = () => {
 const addForm = () => {
   console.log(checkForm.value)
 }
-function pageUpdate(val) {}
-function sizeUpdate(val) {}
+
+function pageUpdate(val) {
+  state.current = val;
+  query();
+}
+function sizeUpdate(val) {
+  state.pageSize = val;
+  query();
+}
 
 function submitForm() {
   checkFormRef.value.validate(valid => {
@@ -125,13 +135,18 @@ onMounted(() => {
 })
 
 const getNumberListQuery = () => {
-  getNumberList(state.formInline).then((res => {
+  getNumberList({
+    ...state.formInline,
+    pageNum: state.current,
+    pageSize: state.pageSize,
+  }).then((res => {
     const result = res?.rows || [];
     result.forEach(item => {
 
     })
     state.recordList = result;
     state.total = res?.total;
+    state.loading = false;
   }))
 }
 </script>

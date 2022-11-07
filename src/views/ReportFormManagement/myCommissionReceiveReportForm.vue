@@ -32,8 +32,9 @@
 </template>
 
 <script setup>
-import { reactive, ref, toRefs } from 'vue'
+import { reactive, ref, toRefs, onMounted } from 'vue'
 import Table from '@/components/ProTable/index.vue'
+import { commissionModifyStatis } from '@/api/reportForm/reportForm'
 
 const state = reactive({
   recordList: [
@@ -58,11 +59,32 @@ const state = reactive({
   formInline: {
     email: null,
   },
+  loading: true,
 })
 const { checkDia, checkForm, checkFormRef } = toRefs(state)
 
+onMounted(() => {
+  commissionModifyStatisData()
+})
+const commissionModifyStatisData = () => {
+  state.loading = true;
+  commissionModifyStatis({
+    ...state.formInline,
+    pageNum: state.current,
+    pageSize: state.pageSize,
+  }).then(item => {
+    if (item.code === 200) {
+      state.recordList = item.rows
+      state.total = item.total
+    }
+    state.loading = false;
+    console.log(item)
+  })
+}
+
 // 查询
 const query = () => {
+  commissionModifyStatisData();
   console.log(state.formInline)
 }
 // 点击切换
@@ -76,8 +98,14 @@ const Check = data => {
     }
   })
 }
-function pageUpdate(val) {}
-function sizeUpdate(val) {}
+function pageUpdate(val) {
+  state.current = val;
+  query();
+}
+function sizeUpdate(val) {
+  state.pageSize = val;
+  query();
+}
 </script>
 
 <style lang="scss" scoped>

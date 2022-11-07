@@ -40,3 +40,13 @@
 .el-form-item__error {
   margin-top: 2px;
 }
+
+.el-form-item--default {
+  display: flex;
+  align-content: center;
+}
+.el-form-error {
+  color: rgb(214, 27, 27);
+  font-size: 10px;
+  line-height: 18px;
+}

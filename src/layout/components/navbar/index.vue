@@ -30,8 +30,8 @@
       <!-- 组件国际化 -->
       <!-- <LangSelect class="right-menu-qh"></LangSelect> -->
 
-      <el-dropdown class="p8 avatar-container right-menu-item hover-effect" trigger="click">
-        <div class="avatar-wrapper">
+      <el-dropdown class="p8 avatar-container right-menu-item" trigger="click">
+        <div class="avatar-wrapper hover-effect">
           <!-- <img :src="set.avatar + '?imageView2/1/w/80/h/80'" class="user-avatar" /> -->
           <el-avatar :icon="UserFilled" :size="24" />
 
@@ -47,7 +47,7 @@
         </div>
 
         <template #dropdown>
-          <el-dropdown-menu>
+          <el-dropdown-menu style="padding: 5px">
             <!-- <router-link to="/user/index">
               <el-dropdown-item>个人中心</el-dropdown-item>
             </router-link> -->
@@ -124,20 +124,20 @@
         </el-form-item>
         <el-form-item prop="typeRecordId" label="取款银行:" v-if="checkForm.withdrawType === '1'">
           <el-select
-            v-if="set.optionData1.length > 0"
+            v-if="set.optionData1Canuse.length > 0"
             v-model="checkForm.typeRecordId"
             placeholder="请选择取款银行"
             style="width: 100%"
             size="large"
             clearable
           >
-            <el-option :label="item.bankName" :value="item.id" v-for="item in set.optionData1" :key="item.id" />
+            <el-option :label="item.bankName" :value="item.id" v-for="item in set.optionData1" :key="item.id"/>
           </el-select>
-          <div v-else style="color: #178aff; cursor: pointer" @click="clicks1">请先绑定银行卡</div>
+          <div v-else style="color: #178aff; cursor: pointer" @click="clicks1(set.optionData1.length > 0 ? '' : 'bank')">{{set.optionData1.length > 0  ? '请先启用银行卡' : '请先绑定银行卡'}}</div>
         </el-form-item>
         <el-form-item prop="typeRecordId" label="虚拟币渠道:" v-if="checkForm.withdrawType === '2'">
           <el-select
-            v-if="set.optionData2.length > 0"
+            v-if="set.optionData2Canuse.length > 0"
             v-model="checkForm.typeRecordId"
             placeholder="请选择虚拟币渠道"
             style="width: 100%"
@@ -146,7 +146,7 @@
           >
             <el-option :label="item.walletName" :value="item.id" v-for="item in set.optionData2" :key="item.id" />
           </el-select>
-          <div v-else style="color: #178aff; cursor: pointer" @click="clicks1">请先绑定虚拟币</div>
+          <div v-else style="color: #178aff; cursor: pointer" @click="clicks1(set.optionData2.length > 0 ? '' : 'usdt')">{{set.optionData2.length > 0  ? '请先启用虚拟币账户' : '请先绑定虚拟币账户'}}</div>
         </el-form-item>
         <el-form-item prop="phone" label="手机号:">
           <el-input v-model="checkForm.phone" placeholder="请输入手机号" class="inputs1" clearable maxlength="11" />
@@ -201,7 +201,8 @@ import Logo from '@/layout/components/sidebar/Logo'
 import MenuBar from '../sidebar/Menu'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { getBalanceInfo, sendSms, confirm } from '@/api/drawing/drawing'
-import { getBankList, getWalletList } from '@/api/user'
+import { getBankList, getWalletList } from '@/api/user';
+import { agentTypeDic } from '@/utils/index'
 const router = useRouter()
 const appStore = useAppStore()
 const userStore = useUserStore()
@@ -226,34 +227,19 @@ const set = reactive({
   userName: computed(() => {
     const agentName = userStore?.userInfo?.agentName
     //1-技术专用,为空为代理账号
-    return userStore?.userInfo?.accountType ? '技术专用' : `代理用户${agentName ? '-' + agentName : ''}`
+    return agentName;
   }),
   device: computed(() => {
     return appStore.device
   }),
   agentTypeName: computed(() => {
     const type = userStore?.userInfo?.agentType
-    let userName = '管理员'
-    switch (type) {
-      case 0:
-        userName = '管理员'
-        break
-      case 1:
-        userName = '普通代理'
-        break
-      case 2:
-        userName = '扶持代理'
-        break
-      case 3:
-        userName = '无条件扶持代理'
-        break
-      case 4:
-        userName = '团队代理'
-        break
+    let agentType = agentTypeDic[type];
+    if (userStore?.userInfo?.accountType) {
+      agentType = '技术专用';
     }
-    return userName
+    return agentType
   }),
-
   checkFormRef11: null,
   checkDia: false,
   checkForm: {
@@ -270,7 +256,9 @@ const set = reactive({
   agentAccount: '',
 
   optionData1: [],
+  optionData1Canuse: [],
   optionData2: [],
+  optionData2Canuse: [],
 })
 const { checkForm, checkDia, checkFormRef11 } = toRefs(set)
 const personal = () => {
@@ -279,9 +267,9 @@ const personal = () => {
 }
 
 // 跳转绑定卡
-const clicks1 = () => {
+const clicks1 = (type) => {
   cancelDia()
-  router.push({ name: 'personalCenter', query: { id: '3' } })
+  router.push({ name: 'personalCenter', query: { id: '3', popUpType:  type} })
 }
 
 const getBalanceInfos = () => {
@@ -294,17 +282,29 @@ const getBalanceInfos = () => {
 }
 
 const modify = () => {
-  getBalanceInfos()
+  getBalanceInfos();
   set.agentAccount = JSON.parse(sessionStorage.getItem('userInfo')).agentAccount
   // 银行卡
   getBankList().then(item => {
     if (item.code === 200) {
-      set.optionData1 = item.rows
+      set.optionData1 = item.rows || [];
+      set.optionData1Canuse = [];
+      set.optionData1.forEach(item => {
+        if (item.bindStatus == 1) {
+          set.optionData1Canuse.push(item);
+        }
+      })
     }
   })
   // 获取虚拟币
   getWalletList().then(item => {
-    set.optionData2 = item.rows
+    set.optionData2 = item.rows || [];
+    set.optionData2Canuse = [];
+      set.optionData1.forEach(item => {
+        if (item.bindStatus == 1) {
+          set.optionData2Canuse.push(item);
+        }
+      })
   })
   set.checkDia = true
 }
@@ -470,6 +470,7 @@ defineOptions({
         display: flex;
         align-items: center;
         justify-content: space-between;
+        padding: 5px 8px;
         .user-avatar {
           cursor: pointer;
           width: 40px;
@@ -516,10 +517,10 @@ defineOptions({
           // position: absolute;
           // right: -20px;
           // top: 0;
-          margin-left: 24px;
+          margin-left: 16px;
           img {
-            width: 12px;
-            height: 9px;
+            width: 9px;
+            height: 5px;
           }
         }
       }
@@ -637,7 +638,7 @@ defineOptions({
 }
 .but {
   display: flex;
-  justify-content: end;
+  justify-content: flex-end;
   .buts1 {
     width: 103px;
     height: 42px;

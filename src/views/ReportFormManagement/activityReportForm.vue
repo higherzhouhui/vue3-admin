@@ -27,7 +27,7 @@
         >
       </div> -->
     </div>
-    <div style="padding: 12px; background: #fafafa; border-radius: 10px">
+    <div style="padding: 12px; background: #fafafa; border-radius: 10px" v-loading="state.loading">
       <Table
         :data="state.recordList"
         :columns="state.columns"
@@ -37,6 +37,7 @@
         :pageUpdate="pageUpdate"
         :sizeUpdate="sizeUpdate"
         :summary-method="getSummaries"
+        maxHeight="calc(100vh - 360px)"
         show-summary
       >
       </Table>
@@ -88,6 +89,7 @@ const state = reactive({
       Check: false,
     },
   ],
+  loading: true,
 })
 const { checkDia, checkForm, checkFormRef } = toRefs(state)
 
@@ -95,11 +97,17 @@ onMounted(() => {
   activityBonusStatisData()
 })
 const activityBonusStatisData = () => {
-  activityBonusStatis(state.formInline).then(item => {
+  state.loading = true;
+  activityBonusStatis({
+    ...state.formInline,
+    pageNum: state.current,
+    pageSize: state.pageSize,
+  }).then(item => {
     if (item.code === 200) {
       state.recordList = item.rows
       state.total = item.total
     }
+    state.loading = false;
     console.log(item)
   })
 }
@@ -153,8 +161,14 @@ const getSummaries = param => {
   return sums
 }
 
-function pageUpdate(val) {}
-function sizeUpdate(val) {}
+function pageUpdate(val) {
+  state.current = val;
+  query();
+}
+function sizeUpdate(val) {
+  state.pageSize = val;
+  query();
+}
 </script>
 
 <style lang="scss" scoped>
